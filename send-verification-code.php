@@ -21,7 +21,8 @@
 
     try {
         // Enable verbose debug output
-        $mail->SMTPDebug = 0;
+        $mail->SMTPDebug = SMTP::DEBUG_SERVER;
+        // $mail->SMTPDebug = 0;
 
         $mail->SMTPOptions = array(
             'ssl' => array(
@@ -44,7 +45,7 @@
         $mail->Username = "tzumi.10@gmail.com";
 
         // SMTP password
-        $mail->Password = 'xbyt bmhz waui xwiy';
+        $mail->Password = 'xegl wash zlku nrdj';
 
         // Enable TLS encryption;
         $mail->SMTPSecure = PHPMailer::ENCRYPTION_STARTTLS;

@@ -48,6 +48,14 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST["delete"])) {
     }
 }
 
+// Check for user account deletion messages
+$user_success_message = isset($_SESSION['user_success_message']) ? $_SESSION['user_success_message'] : '';
+$user_error_message = isset($_SESSION['user_error_message']) ? $_SESSION['user_error_message'] : '';
+
+// Unset user account deletion session messages
+unset($_SESSION['user_success_message']);
+unset($_SESSION['user_error_message']);
+
 // Close the database connection
 $conn = null;
 ?>
@@ -385,6 +393,13 @@ $conn = null;
                 <!-- Begin Page Content -->
                 <div class="container-fluid">
 
+                    <!-- Display user account deletion messages -->
+                    <?php if ($user_success_message): ?>
+                        <div class="alert alert-success">
+                            <?php echo $user_success_message; ?>
+                        </div>
+                    <?php endif; ?>
+
                     <!-- Page Heading -->
                     <div class="d-sm-flex align-items-center justify-content-between mb-4">
                         <h1 class="h3 mb-0 text-gray-800">History</h1>
@@ -432,7 +447,7 @@ $conn = null;
                                                 <th scope="col">Phone</th>
                                                 <th scope="col">Picture</th>
                                                 <th scope="col">Position</th>
-                                                <th scope="col">History</th>
+                                                <th scope="col">Action</th>
                                             </tr>
                                             </thead>
                                             <tbody>
@@ -445,7 +460,8 @@ $conn = null;
                                                     <td><?php echo $teacher['phone']; ?></td>
                                                     <td><img src="<?php echo $teacher['pic']; ?>" alt="<?php echo "img" ?>" style="max-width: 100px;"></td>
                                                     <td><?php echo $teacher['position']; ?></td>
-                                                    <td><?php echo '<a class="btn btn-info" href="admin22_viewHistory.php?user_id=' . $teacher["user_id"] . '&username=' . $teacher["username"] . '">View</a>'; ?></td>
+                                                    <td><?php echo '<a class="btn btn-info" href="admin22_viewHistory.php?user_id=' . $teacher["user_id"] . '&username=' . $teacher["username"] . '">History</a>'; ?>
+                                                    <?php echo '<a class="btn btn-danger" href="admin23_delUser.php?user_id=' . $teacher["user_id"] . '&username=' . $teacher["username"] . '">Delete</a>'; ?></td>
                                                 </tr>
                                             <?php endforeach; ?>
                                             </tbody>

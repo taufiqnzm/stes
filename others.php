@@ -1,5 +1,6 @@
 <?php
 session_start();
+include "restricted.php";
 if (isset($_SESSION['user_id'])) {
     $username = $_SESSION['username']; // Retrieve the username from the session
     $pic = $_SESSION['pic']; // Retrieve the pic from the session
