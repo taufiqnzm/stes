@@ -27,7 +27,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     $updateQuery = "UPDATE applicants 
                     SET existence = :existence, start_date = :start_date, final_date = :final_date, 
                         time_leave = :time_leave, time_back = :time_back, reason = :reason,  
-                        program_name = :program_name, location = :location, organizer = :organizer 
+                        program_name = :program_name, location = :location, organizer = :organizer, 
                         time_leave = :time_leave
                     WHERE form_id = :form_id";
 
@@ -500,23 +500,23 @@ $conn = null;
                                                                             <input type="time" class="form-control" id="inputFinalTime<?php echo $index; ?>" name="time_back" value="<?php echo htmlspecialchars($teacher['time_back']); ?>" required>
                                                                         </div>
                                                                     </div>                                                                                                                                                                                                                               
-                                                                    <div class="form-group reasonFields<?php echo $index; ?>" style="display:none">
+                                                                    <div class="form-group reasonFields<?php echo $index; ?>" <?php echo ($teacher['existence'] !== 'Absent' && $teacher['existence'] !== 'Emergency') ? 'style="display:none;"' : ''; ?>>
                                                                         <label for="editReason<?php echo $index; ?>">Reason</label>
                                                                         <input type="text" class="form-control" id="editReason<?php echo $index; ?>" name="reason" value="<?php echo htmlspecialchars($teacher['reason']); ?>" >
                                                                     </div>
-                                                                    <div class="form-group programFields<?php echo $index; ?>" style="display:none">
+                                                                    <div class="form-group programFields<?php echo $index; ?>" <?php echo ($teacher['existence'] !== 'Official Business') ? 'style="display:none;"' : ''; ?>>
                                                                         <label for="editProgramName<?php echo $index; ?>">Program Name</label>
                                                                         <input type="text" class="form-control" id="editProgramName<?php echo $index; ?>" name="program_name" value="<?php echo htmlspecialchars($teacher['program_name']); ?>">
                                                                     </div>
-                                                                    <div class="form-group locationFields<?php echo $index; ?>" style="display:none">
+                                                                    <div class="form-group locationFields<?php echo $index; ?>" <?php echo ($teacher['existence'] !== 'Official Business') ? 'style="display:none;"' : ''; ?>>
                                                                         <label for="editLocation<?php echo $index; ?>">Location</label>
                                                                         <input type="text" class="form-control" id="editLocation<?php echo $index; ?>" name="location" value="<?php echo htmlspecialchars($teacher['location']); ?>">
                                                                     </div>
-                                                                    <div class="form-group organizerFields<?php echo $index; ?>" style="display:none">
+                                                                    <div class="form-group organizerFields<?php echo $index; ?>" <?php echo ($teacher['existence'] !== 'Official Business') ? 'style="display:none;"' : ''; ?>>
                                                                         <label for="editOrganizer<?php echo $index; ?>">Organizer</label>
                                                                         <input type="text" class="form-control" id="editOrganizer<?php echo $index; ?>" name="organizer" value="<?php echo htmlspecialchars($teacher['organizer']); ?>">
                                                                     </div>
-                                                                    <div class="form-group cutiLainFields<?php echo $index; ?>" style="display:none">
+                                                                    <div class="form-group cutiLainFields<?php echo $index; ?>" <?php echo ($teacher['existence'] !== 'Cuti Lain') ? 'style="display:none;"' : ''; ?>>
                                                                         <label for="editCutiLain<?php echo $index; ?>">Cuti Lain</label>
                                                                         <input type="text" class="form-control" id="editCutiLain<?php echo $index; ?>" name="leave_type" value="<?php echo htmlspecialchars($teacher['leave_type']); ?>">
                                                                     </div>
