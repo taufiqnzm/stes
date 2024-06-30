@@ -21,12 +21,14 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     $program_name = $_POST['program_name'];
     $location = $_POST['location'];
     $organizer = $_POST['organizer'];
+    $time_leave = $_POST['time_leave'];
 
     // Update the database
     $updateQuery = "UPDATE applicants 
                     SET existence = :existence, start_date = :start_date, final_date = :final_date, 
-                        time_leave = :time_leave, time_back = :time_back, reason = :reason, 
+                        time_leave = :time_leave, time_back = :time_back, reason = :reason,  
                         program_name = :program_name, location = :location, organizer = :organizer 
+                        time_leave = :time_leave
                     WHERE form_id = :form_id";
 
     $stmt = $conn->prepare($updateQuery);
@@ -40,6 +42,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     $stmt->bindParam(':program_name', $program_name, PDO::PARAM_STR);
     $stmt->bindParam(':location', $location, PDO::PARAM_STR);
     $stmt->bindParam(':organizer', $organizer, PDO::PARAM_STR);
+    $stmt->bindParam(':time_leave', $time_leave, PDO::PARAM_STR);
     $stmt->execute();
 
     // Redirect to avoid form resubmission
@@ -58,7 +61,7 @@ echo '<input type="hidden" name="username" value="' . $personal_username . '">';
 $showQuery = "SELECT applicants.form_id, applicants.name, DATE_FORMAT(applicants.start_date, '%d-%m-%Y') AS start_date, 
                  DATE_FORMAT(applicants.final_date, '%d-%m-%Y') AS final_date,
                  applicants.time_leave, applicants.time_back, applicants.reason, applicants.existence, 
-                 applicants.program_name, applicants.location, applicants.organizer
+                 applicants.program_name, applicants.location, applicants.organizer, applicants.leave_type
           FROM applicants
           JOIN users ON applicants.user_id = users.user_id
           WHERE applicants.user_id = :user_id
@@ -413,6 +416,7 @@ $conn = null;
                                                 <th scope="col">Program Name</th>
                                                 <th scope="col">Location</th>
                                                 <th scope="col">Organizer</th>
+                                                <th scope="col">Cuti Lain</th>
                                                 <th scope="col">Action</th>
                                             </tr>
                                             </thead>
@@ -428,6 +432,7 @@ $conn = null;
                                                     <td><?php echo $teacher['program_name']; ?></td>
                                                     <td><?php echo $teacher['location']; ?></td>
                                                     <td><?php echo $teacher['organizer']; ?></td>
+                                                    <td><?php echo $teacher['leave_type']; ?></td>
                                                     <td>
                                                         <?php if ($teacher['start_date'] == $current_date): ?>
                                                             <!-- Edit button triggers the modal -->
@@ -470,7 +475,7 @@ $conn = null;
                                                                                 <option value="Cuti Lain" <?php if ($teacher['existence'] === 'Cuti Lain') echo 'selected'; ?>>Cuti Lain</option>
                                                                             </select>
                                                                         </div>
-                                                                    </div>
+                                                                    </div>                                                
                                                                     <div class="form-group row">
                                                                         <?php
                                                                             $startDate = isset($teacher['start_date']) ? date('Y-m-d', strtotime($teacher['start_date'])) : '';
@@ -494,22 +499,26 @@ $conn = null;
                                                                         <div class="col-sm-6">
                                                                             <input type="time" class="form-control" id="inputFinalTime<?php echo $index; ?>" name="time_back" value="<?php echo htmlspecialchars($teacher['time_back']); ?>" required>
                                                                         </div>
-                                                                    </div>
-                                                                    <div class="form-group">
+                                                                    </div>                                                                                                                                                                                                                               
+                                                                    <div class="form-group reasonFields<?php echo $index; ?>" style="display:none">
                                                                         <label for="editReason<?php echo $index; ?>">Reason</label>
-                                                                        <input type="text" class="form-control" id="editReason<?php echo $index; ?>" name="reason" value="<?php echo htmlspecialchars($teacher['reason']); ?>">
+                                                                        <input type="text" class="form-control" id="editReason<?php echo $index; ?>" name="reason" value="<?php echo htmlspecialchars($teacher['reason']); ?>" >
                                                                     </div>
-                                                                    <div class="form-group">
+                                                                    <div class="form-group programFields<?php echo $index; ?>" style="display:none">
                                                                         <label for="editProgramName<?php echo $index; ?>">Program Name</label>
                                                                         <input type="text" class="form-control" id="editProgramName<?php echo $index; ?>" name="program_name" value="<?php echo htmlspecialchars($teacher['program_name']); ?>">
                                                                     </div>
-                                                                    <div class="form-group">
+                                                                    <div class="form-group locationFields<?php echo $index; ?>" style="display:none">
                                                                         <label for="editLocation<?php echo $index; ?>">Location</label>
                                                                         <input type="text" class="form-control" id="editLocation<?php echo $index; ?>" name="location" value="<?php echo htmlspecialchars($teacher['location']); ?>">
                                                                     </div>
-                                                                    <div class="form-group">
+                                                                    <div class="form-group organizerFields<?php echo $index; ?>" style="display:none">
                                                                         <label for="editOrganizer<?php echo $index; ?>">Organizer</label>
                                                                         <input type="text" class="form-control" id="editOrganizer<?php echo $index; ?>" name="organizer" value="<?php echo htmlspecialchars($teacher['organizer']); ?>">
+                                                                    </div>
+                                                                    <div class="form-group cutiLainFields<?php echo $index; ?>" style="display:none">
+                                                                        <label for="editCutiLain<?php echo $index; ?>">Cuti Lain</label>
+                                                                        <input type="text" class="form-control" id="editCutiLain<?php echo $index; ?>" name="leave_type" value="<?php echo htmlspecialchars($teacher['leave_type']); ?>">
                                                                     </div>
                                                                 </div>
                                                                 <div class="modal-footer">
@@ -583,15 +592,31 @@ $conn = null;
             var index = this.id.replace('inputExistences', ''); // Extract the index from the element ID
             var selectedExistence = this.value;
 
-            // Hide all condition-specific fields
-            document.querySelector('.programFields' + index).style.display = 'none';
-            document.querySelector('.reasonFields' + index).style.display = 'none';
-
             // Show fields based on selected existence
             if (selectedExistence === 'Official Business') {
                 document.querySelector('.programFields' + index).style.display = 'block';
+                document.querySelector('.locationFields' + index).style.display = 'block';
+                document.querySelector('.organizerFields' + index).style.display = 'block';
+                document.querySelector('.cutiLainFields' + index).style.display = 'none';
+                document.querySelector('.reasonFields' + index).style.display = 'none';
             } else if (selectedExistence === 'Absent' || selectedExistence === 'Emergency') {
                 document.querySelector('.reasonFields' + index).style.display = 'block';
+                document.querySelector('.programFields' + index).style.display = 'none';
+                document.querySelector('.locationFields' + index).style.display = 'none';
+                document.querySelector('.organizerFields' + index).style.display = 'none';
+                document.querySelector('.cutiLainFields' + index).style.display = 'none';
+            } else if (selectedExistence === 'Keberadaan Jam' || selectedExistence === 'CRK' || selectedExistence === 'Haji Umrah' | selectedExistence === 'Cuti Bersalin') {
+                document.querySelector('.reasonFields' + index).style.display = 'none';
+                document.querySelector('.programFields' + index).style.display = 'none';
+                document.querySelector('.locationFields' + index).style.display = 'none';
+                document.querySelector('.organizerFields' + index).style.display = 'none';
+                document.querySelector('.cutiLainFields' + index).style.display = 'none';
+            } else if (selectedExistence === 'Cuti Lain') {
+                document.querySelector('.cutiLainFields' + index).style.display = 'block';
+                document.querySelector('.reasonFields' + index).style.display = 'none';
+                document.querySelector('.programFields' + index).style.display = 'none';
+                document.querySelector('.locationFields' + index).style.display = 'none';
+                document.querySelector('.organizerFields' + index).style.display = 'none';
             }
             // Add more conditions as needed
         });
