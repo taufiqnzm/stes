@@ -14,13 +14,9 @@ if (isset($_GET["email"])) {
         $verification_code = $_SESSION['verification_code'];
     } else {
         // Handle the case where the verification code is not set in the session
+        echo "Verification code not found in session.";
+        exit;
     }
-
-    // Update the verification code and timestamp in the database
-    $sql = "UPDATE users SET verification_code = ?, verification_code_timestamp = ? WHERE email = ?";
-    $stmt = $conn->prepare($sql);
-    $currentTimestamp = date('Y-m-d H:i:s'); // Get the current timestamp
-    $stmt->execute([$verification_code, $currentTimestamp, $email]);
 
     // Provide a message to the user
     $message = "A new verification code has been sent to your email. The code will expire in 30 minutes";

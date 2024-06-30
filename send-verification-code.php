@@ -1,6 +1,11 @@
 <?php
-// session_start();
 date_default_timezone_set('Asia/Kuala_Lumpur');
+
+// Start the session if it's not already started
+if (session_status() === PHP_SESSION_NONE) {
+    session_start();
+}
+
 // Import PHPMailer classes into the global namespace
 use PHPMailer\PHPMailer\PHPMailer;
 use PHPMailer\PHPMailer\SMTP;
@@ -134,4 +139,4 @@ try {
 } catch (Exception $e) {
     echo "Message could not be sent. Mailer Error: {$mail->ErrorInfo}";
 }
-?>
+

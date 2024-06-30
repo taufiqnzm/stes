@@ -5,9 +5,6 @@ if (isset($_POST["reset"])) {
     $email = $_POST["email"];
     include 'send-verification-code.php'; // Include the send-verification-code file to send verification code
 
-    // Generate a random verification code
-    $verification_code = substr(number_format(time() * rand(), 0, '', ''), 0, 6);
-
         // Update the verification code and timestamp in the database
         try {
             $stmt = $conn->prepare("UPDATE users SET verification_code = :verification_code, verification_code_timestamp = :verification_code_timestamp WHERE email = :email");
