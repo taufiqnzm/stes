@@ -21,16 +21,37 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     $program_name = $_POST['program_name'];
     $location = $_POST['location'];
     $organizer = $_POST['organizer'];
-    $time_leave = $_POST['time_leave'];
+    $leave_type = $_POST['leave_type'];
 
     // Update the database
     $updateQuery = "UPDATE applicants 
                     SET existence = :existence, start_date = :start_date, final_date = :final_date, 
                         time_leave = :time_leave, time_back = :time_back, reason = :reason,  
                         program_name = :program_name, location = :location, organizer = :organizer, 
-                        time_leave = :time_leave
+                        leave_type = :leave_type
                     WHERE form_id = :form_id";
 
+    if  ($existence == 'Absent' || $existence == 'Emergency') {
+        $program_name = '-';
+        $location = '-';
+        $organizer = '-';
+        $leave_type = '-';
+    } else if ($existence == 'Official Business') {
+        $reason = '-';
+        $leave_type = '-';
+    } else if ($existence == 'Keberadaan Jam' || $existence == 'Haji Umrah'|| $existence == 'CRK' || $existence == 'Cuti Bersalin' ) {
+        $reason = '-';
+        $program_name = '-';
+        $location = '-';
+        $organizer = '-';
+        $leave_type = '-';
+    } else if ($existence == 'Cuti Lain') {
+        $reason = '-';
+        $program_name = '-';
+        $location = '-';
+        $organizer = '-';
+    }
+    
     $stmt = $conn->prepare($updateQuery);
     $stmt->bindParam(':form_id', $form_id, PDO::PARAM_INT);
     $stmt->bindParam(':existence', $existence, PDO::PARAM_STR);
@@ -42,7 +63,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     $stmt->bindParam(':program_name', $program_name, PDO::PARAM_STR);
     $stmt->bindParam(':location', $location, PDO::PARAM_STR);
     $stmt->bindParam(':organizer', $organizer, PDO::PARAM_STR);
-    $stmt->bindParam(':time_leave', $time_leave, PDO::PARAM_STR);
+    $stmt->bindParam(':leave_type', $leave_type, PDO::PARAM_STR);
     $stmt->execute();
 
     // Redirect to avoid form resubmission
@@ -65,7 +86,7 @@ $showQuery = "SELECT applicants.form_id, applicants.name, DATE_FORMAT(applicants
           FROM applicants
           JOIN users ON applicants.user_id = users.user_id
           WHERE applicants.user_id = :user_id
-          ORDER BY applicants.start_date DESC, applicants.time_leave DESC";
+          ORDER BY applicants.start_date DESC, applicants.leave_type DESC";
 
 // Execute the main showQuery
 $stmt = $conn->prepare($showQuery);
