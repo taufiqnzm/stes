@@ -93,7 +93,7 @@ if (isset($_POST["register"])) {
                                             <input type="password" class="form-control" name="confirm_password" id="confirm_password" pattern="(?=.*\d)(?=.*[a-z])(?=.*[A-Z])(?=.*\W).{8,}" title="Must contain at least one number, one uppercase and lowercase letter, one symbol, and be at least 8 characters long" required>
                                             <!-- <span id="confirmValidation" style="display: none; color: red;">Passwords do not match or do not meet the requirements.</span>                                        </div> -->
                                         </div>
-                                        <button type="submit" class="btn btn-primary col-12" name="register" style=" font-size: 16px; background: linear-gradient(45deg, #0077FF, #0033AA); color: #fff; border: 1px solid #0077FF; padding: 10px 20px; border-radius: 25px; text-transform: uppercase; font-weight: bold; box-shadow: 4px 4px 10px rgba(0, 0, 0, 0.2);">Register</button>
+                                        <button type="submit" class="btn btn-primary col-12" name="register" style=" font-size: 16px; background: linear-gradient(45deg, #0077FF, #0033AA); color: #fff; border: 1px solid #0077FF; padding: 10px 20px; border-radius: 25px; text-transform: uppercase; font-weight: bold; box-shadow: 4px 4px 10px rgba(0, 0, 0, 0.2);">Create</button>
                                     </form>
                                 </div>
                             </div>

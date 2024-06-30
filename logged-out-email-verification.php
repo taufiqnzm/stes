@@ -8,7 +8,7 @@ $message = "A verification code has been sent to your email. The code will expir
 
 if (isset($_GET["email"])) {
     $email = $_GET["email"];
-    
+
     // Get the verification code from the session variable
     if (isset($_SESSION['verification_code'])) {
         $verification_code = $_SESSION['verification_code'];
@@ -69,19 +69,18 @@ if (isset($_POST["verify"])) {
 
 if (isset($_POST["resend"])) {
     $email = $_POST["email"];
-    
-    // Generate a new verification code (similar to the registration process)
-    $new_verification_code = substr(number_format(time() * rand(), 0, '', ''), 0, 6);
 
     include 'send-verification-code.php'; // Include the send-verification-code file to send verification code
+
+    $verification_code = $_SESSION['verification_code'];
 
     // Update the verification code and timestamp in the database
     $sql = "UPDATE users SET verification_code = ?, verification_code_timestamp = ? WHERE email = ?";
     $stmt = $conn->prepare($sql);
-    $stmt->execute([$new_verification_code, $currentTimestamp, $email]);
+    $stmt->execute([$verification_code, $currentTimestamp, $email]);
 
     // Provide a message to the user
-        $message = "A new verification code has been sent to your email. The code will expire in 30 minutes";
+    $message = "A new verification code has been sent to your email. The code will expire in 30 minutes";
     }
 ?>
 
