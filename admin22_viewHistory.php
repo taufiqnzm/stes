@@ -1,9 +1,51 @@
 <?php
+date_default_timezone_set('Asia/Kuala_Lumpur');
 session_start();
 $username = $_SESSION['username'];
 $pic = $_SESSION['pic'];
 require_once "config.php"; // Use require_once to ensure it's included only once
 include "restricted.php";
+
+$current_date = date('d-m-Y');
+
+// Check if the form is submitted
+if ($_SERVER['REQUEST_METHOD'] == 'POST') {
+    // Retrieve form data
+    $form_id = intval($_POST['form_id']);
+    $existence = $_POST['existence'];
+    $start_date = $_POST['start_date'];
+    $final_date = $_POST['final_date'];
+    $time_leave = $_POST['time_leave'];
+    $time_back = $_POST['time_back'];
+    $reason = $_POST['reason'];
+    $program_name = $_POST['program_name'];
+    $location = $_POST['location'];
+    $organizer = $_POST['organizer'];
+
+    // Update the database
+    $updateQuery = "UPDATE applicants 
+                    SET existence = :existence, start_date = :start_date, final_date = :final_date, 
+                        time_leave = :time_leave, time_back = :time_back, reason = :reason, 
+                        program_name = :program_name, location = :location, organizer = :organizer 
+                    WHERE form_id = :form_id";
+
+    $stmt = $conn->prepare($updateQuery);
+    $stmt->bindParam(':form_id', $form_id, PDO::PARAM_INT);
+    $stmt->bindParam(':existence', $existence, PDO::PARAM_STR);
+    $stmt->bindParam(':start_date', $start_date, PDO::PARAM_STR);
+    $stmt->bindParam(':final_date', $final_date, PDO::PARAM_STR);
+    $stmt->bindParam(':time_leave', $time_leave, PDO::PARAM_STR);
+    $stmt->bindParam(':time_back', $time_back, PDO::PARAM_STR);
+    $stmt->bindParam(':reason', $reason, PDO::PARAM_STR);
+    $stmt->bindParam(':program_name', $program_name, PDO::PARAM_STR);
+    $stmt->bindParam(':location', $location, PDO::PARAM_STR);
+    $stmt->bindParam(':organizer', $organizer, PDO::PARAM_STR);
+    $stmt->execute();
+
+    // Redirect to avoid form resubmission
+    header("Location: ".$_SERVER['PHP_SELF']."?user_id=".$_GET['user_id']."&username=".$_GET['username']);
+    exit;
+}
 
 // Retrieve user ID from the URL
 $user_id = isset($_GET['user_id']) ? intval($_GET['user_id']) : 0;
@@ -12,8 +54,8 @@ $personal_username = isset($_GET['username']) ? $_GET['username'] : null;
 echo '<input type="hidden" name="user_id" value="' . $user_id . '">';
 echo '<input type="hidden" name="username" value="' . $personal_username . '">';
 
-// Main query to fetch data for absent teachers
-$query = "SELECT applicants.name, DATE_FORMAT(applicants.start_date, '%d-%m-%Y') AS start_date, 
+// Main showQuery to fetch data for absent teachers
+$showQuery = "SELECT applicants.form_id, applicants.name, DATE_FORMAT(applicants.start_date, '%d-%m-%Y') AS start_date, 
                  DATE_FORMAT(applicants.final_date, '%d-%m-%Y') AS final_date,
                  applicants.time_leave, applicants.time_back, applicants.reason, applicants.existence, 
                  applicants.program_name, applicants.location, applicants.organizer
@@ -22,8 +64,8 @@ $query = "SELECT applicants.name, DATE_FORMAT(applicants.start_date, '%d-%m-%Y')
           WHERE applicants.user_id = :user_id
           ORDER BY applicants.start_date DESC, applicants.time_leave DESC";
 
-// Execute the main query
-$stmt = $conn->prepare($query);
+// Execute the main showQuery
+$stmt = $conn->prepare($showQuery);
 $stmt->bindParam(':user_id', $user_id, PDO::PARAM_INT);
 $stmt->execute();
 $result = $stmt->fetchAll(PDO::FETCH_ASSOC);
@@ -371,6 +413,7 @@ $conn = null;
                                                 <th scope="col">Program Name</th>
                                                 <th scope="col">Location</th>
                                                 <th scope="col">Organizer</th>
+                                                <th scope="col">Action</th>
                                             </tr>
                                             </thead>
                                             <tbody>
@@ -385,7 +428,97 @@ $conn = null;
                                                     <td><?php echo $teacher['program_name']; ?></td>
                                                     <td><?php echo $teacher['location']; ?></td>
                                                     <td><?php echo $teacher['organizer']; ?></td>
+                                                    <td>
+                                                        <?php if ($teacher['start_date'] == $current_date): ?>
+                                                            <!-- Edit button triggers the modal -->
+                                                            <button class="btn btn-dark btn-sm" data-toggle="modal" data-target="#editModal<?php echo $index; ?>">
+                                                                <i class="fas fa-edit"></i> Edit
+                                                            </button>
+                                                        <?php endif; ?>
+                                                    </td>
                                                 </tr>
+
+                                                <!-- Modal for this specific row -->
+                                                <div class="modal fade" id="editModal<?php echo $index; ?>" tabindex="-1" role="dialog" aria-labelledby="editModalLabel<?php echo $index; ?>" aria-hidden="true">
+                                                    <div class="modal-dialog" role="document">
+                                                        <div class="modal-content">
+                                                            <form method="post" action="">
+                                                                <div class="modal-header">
+                                                                    <h5 class="modal-title" id="editModalLabel<?php echo $index; ?>">Edit Information</h5>
+                                                                    <button class="close" type="button" data-dismiss="modal" aria-label="Close">
+                                                                        <span aria-hidden="true">×</span>
+                                                                    </button>
+                                                                </div>
+                                                                <div class="modal-body">
+                                                                    <input type="hidden" name="form_id" value="<?php echo $teacher['form_id']; ?>">
+                                                                    <div class="form-group">
+                                                                        <label for="editName<?php echo $index; ?>">Name</label>
+                                                                        <input type="text" class="form-control" id="editName<?php echo $index; ?>" name="name" value="<?php echo htmlspecialchars($teacher['name']); ?>" readonly>
+                                                                    </div>
+                                                                    <div class="form-group row">
+                                                                        <label for="inputExistences<?php echo $index; ?>" class="col-sm-4 col-form-label">Existences <span class="required"></span></label>
+                                                                        <div class="col-sm-12">
+                                                                            <select class="custom-select inputExistences" id="inputExistences<?php echo $index; ?>" name="existence">
+                                                                                <option hidden selected>Select Existence</option>
+                                                                                <option value="Absent" <?php if ($teacher['existence'] === 'Absent') echo 'selected'; ?>>Ketidakhadiran</option>
+                                                                                <option value="Official Business" <?php if ($teacher['existence'] === 'Official Business') echo 'selected'; ?>>Urusan Rasmi</option>
+                                                                                <option value="Emergency" <?php if ($teacher['existence'] === 'Emergency') echo 'selected'; ?>>Kecemasan</option>
+                                                                                <option value="Keberadaan Jam" <?php if ($teacher['existence'] === 'Keberadaan Jam') echo 'selected'; ?>>Keberadaan Jam</option>
+                                                                                <option value="CRK" <?php if ($teacher['existence'] === 'CRK') echo 'selected'; ?>>Cuti Rehat Khas</option>
+                                                                                <option value="Haji Umrah" <?php if ($teacher['existence'] === 'Haji Umrah') echo 'selected'; ?>>Cuti Haji & Umrah</option>
+                                                                                <option value="Cuti Bersalin" <?php if ($teacher['existence'] === 'Cuti Bersalin') echo 'selected'; ?>>Cuti Bersalin</option>
+                                                                                <option value="Cuti Lain" <?php if ($teacher['existence'] === 'Cuti Lain') echo 'selected'; ?>>Cuti Lain</option>
+                                                                            </select>
+                                                                        </div>
+                                                                    </div>
+                                                                    <div class="form-group row">
+                                                                        <?php
+                                                                            $startDate = isset($teacher['start_date']) ? date('Y-m-d', strtotime($teacher['start_date'])) : '';
+                                                                            $finalDate = isset($teacher['final_date']) ? date('Y-m-d', strtotime($teacher['final_date'])) : '';
+                                                                        ?>
+                                                                        <label for="inputStartDate<?php echo $index; ?>" class="col-sm-6 col-form-label">Start Date<span class="required"></span></label>
+                                                                        <label for="inputFinalDate<?php echo $index; ?>" class="col-sm-6 col-form-label">Final Date<span class="required"></span></label>
+                                                                        <div class="col-sm-6">
+                                                                            <input type="date" class="form-control" id="inputStartDate<?php echo $index; ?>" name="start_date" value="<?php echo htmlspecialchars($startDate); ?>" required>
+                                                                        </div>
+                                                                        <div class="col-sm-6">
+                                                                            <input type="date" class="form-control" id="inputFinalDate<?php echo $index; ?>" name="final_date" value="<?php echo htmlspecialchars($finalDate); ?>" required>
+                                                                        </div>
+                                                                    </div>
+                                                                    <div class="form-group row">
+                                                                        <label for="inputStartTime<?php echo $index; ?>" class="col-sm-6 col-form-label">Time Out<span class="required">*</span></label>
+                                                                        <label for="inputFinalTime<?php echo $index; ?>" class="col-sm-6 col-form-label">Time In<span class="required">*</span></label>
+                                                                        <div class="col-sm-6">
+                                                                            <input type="time" class="form-control" id="inputStartTime<?php echo $index; ?>" name="time_leave" value="<?php echo htmlspecialchars($teacher['time_leave']); ?>" required>
+                                                                        </div>
+                                                                        <div class="col-sm-6">
+                                                                            <input type="time" class="form-control" id="inputFinalTime<?php echo $index; ?>" name="time_back" value="<?php echo htmlspecialchars($teacher['time_back']); ?>" required>
+                                                                        </div>
+                                                                    </div>
+                                                                    <div class="form-group">
+                                                                        <label for="editReason<?php echo $index; ?>">Reason</label>
+                                                                        <input type="text" class="form-control" id="editReason<?php echo $index; ?>" name="reason" value="<?php echo htmlspecialchars($teacher['reason']); ?>">
+                                                                    </div>
+                                                                    <div class="form-group">
+                                                                        <label for="editProgramName<?php echo $index; ?>">Program Name</label>
+                                                                        <input type="text" class="form-control" id="editProgramName<?php echo $index; ?>" name="program_name" value="<?php echo htmlspecialchars($teacher['program_name']); ?>">
+                                                                    </div>
+                                                                    <div class="form-group">
+                                                                        <label for="editLocation<?php echo $index; ?>">Location</label>
+                                                                        <input type="text" class="form-control" id="editLocation<?php echo $index; ?>" name="location" value="<?php echo htmlspecialchars($teacher['location']); ?>">
+                                                                    </div>
+                                                                    <div class="form-group">
+                                                                        <label for="editOrganizer<?php echo $index; ?>">Organizer</label>
+                                                                        <input type="text" class="form-control" id="editOrganizer<?php echo $index; ?>" name="organizer" value="<?php echo htmlspecialchars($teacher['organizer']); ?>">
+                                                                    </div>
+                                                                </div>
+                                                                <div class="modal-footer">
+                                                                    <button type="submit" class="btn btn-primary">Save changes</button>
+                                                                </div>
+                                                            </form>
+                                                        </div>
+                                                    </div>
+                                                </div>
                                             <?php endforeach; ?>
                                             </tbody>
                                         </table>
@@ -442,6 +575,31 @@ $conn = null;
             </div>
         </div>
     </div>
+
+<script>
+    // Event listener for all inputExistences elements
+    document.querySelectorAll('.inputExistences').forEach(function(selectElement) {
+        selectElement.addEventListener('change', function() {
+            var index = this.id.replace('inputExistences', ''); // Extract the index from the element ID
+            var selectedExistence = this.value;
+
+            // Hide all condition-specific fields
+            document.querySelector('.programFields' + index).style.display = 'none';
+            document.querySelector('.reasonFields' + index).style.display = 'none';
+
+            // Show fields based on selected existence
+            if (selectedExistence === 'Official Business') {
+                document.querySelector('.programFields' + index).style.display = 'block';
+            } else if (selectedExistence === 'Absent' || selectedExistence === 'Emergency') {
+                document.querySelector('.reasonFields' + index).style.display = 'block';
+            }
+            // Add more conditions as needed
+        });
+    });
+</script>
+
+    <!-- Bootstrap CSS -->
+    <link href="vendor/bootstrap/css/bootstrap.min.css" rel="stylesheet">
 
     <!-- Bootstrap core JavaScript-->
     <script src="vendor/jquery/jquery.min.js"></script>
