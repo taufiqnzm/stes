@@ -1,37 +1,26 @@
 <?php
 session_start();
-include "restricted.php";
-if (isset($_SESSION['user_id'])) {
-    $username = $_SESSION['username']; // Retrieve the username from the session
-    $pic = $_SESSION['pic']; // Retrieve the pic from the session
-}
+$username = $_SESSION['username'];
+$pic = $_SESSION['pic'];
 require_once "config.php"; // Use require_once to ensure it's included only once
-date_default_timezone_set('Asia/Kuala_Lumpur');
+include "restricted.php";
+include "count_personal_existences.php";
 
-// Get the current date
-$currentDate = date("Y-m-d");
+$user_id = $_SESSION['user_id']; // Assuming you store the user's ID in the session
 
-// Fetch the official_business_teacher_count for today's date from the "dashboard" table
-$query = "SELECT official_business_teacher_count FROM dashboard WHERE `date` = :currentDate";
 
-$stmt = $conn->prepare($query);
-$stmt->bindParam(':currentDate', $currentDate, PDO::PARAM_STR);
-$stmt->execute();
-$result = $stmt->fetch(PDO::FETCH_ASSOC);
-
-$official_business_teacher_count = $result['official_business_teacher_count'];
-
-// Fetch data from the "applicants" table where existence is "Official Business," and the current date is within the range of start_date and final_date
-$query = "SELECT applicants.name, DATE_FORMAT(applicants.start_date, '%d-%m-%Y') AS start_date, 
+// Main query to fetch data for offical business teachers
+$query = "SELECT applicants.name,DATE_FORMAT(applicants.start_date, '%d-%m-%Y') AS start_date, 
                  DATE_FORMAT(applicants.final_date, '%d-%m-%Y') AS final_date,
-                 users.major, users.phone, applicants.program_name,applicants.time_leave, applicants.time_back FROM applicants
+                 applicants.time_leave, applicants.time_back, applicants.evidence
+          FROM applicants
           JOIN users ON applicants.user_id = users.user_id
-          WHERE applicants.existence = 'Official Business' 
-          AND :currentDate BETWEEN applicants.start_date AND applicants.final_date
-          ORDER BY applicants.form_id DESC";
+          WHERE applicants.existence = 'Official Business' AND applicants.user_id = :user_id
+          ORDER BY applicants.start_date DESC, applicants.time_leave DESC";
           
+// Execute the main query
 $stmt = $conn->prepare($query);
-$stmt->bindParam(':currentDate', $currentDate, PDO::PARAM_STR);
+$stmt->bindParam(':user_id', $user_id, PDO::PARAM_INT);
 $stmt->execute();
 $result = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
@@ -44,7 +33,6 @@ foreach ($result as $row) {
 // Close the database connection
 $conn = null;
 ?>
-
 
 <!DOCTYPE html>
 <html lang="en">
@@ -87,7 +75,6 @@ $conn = null;
                 <span><img src="img/logoSTES_white.png" alt="logoStes" style="height: auto; width: 150px;"></span><br><br>
                 <!-- <div class="sidebar-brand-text mx-3" style="font-size: 30px;">STES</div> -->
             </a>
-
             <!-- Divider -->
             <hr class="sidebar-divider my-0">
 
@@ -219,7 +206,7 @@ $conn = null;
                                 </h6>
                                 <a class="dropdown-item d-flex align-items-center" href="#">
                                     <div class="mr-3">
-                                        <div class="icon-circle bg-primary">
+                                        <div class="icon-circle bg-primary" style="font-size: 18px;">
                                             <i class="fas fa-file-alt text-white"></i>
                                         </div>
                                     </div>
@@ -240,7 +227,7 @@ $conn = null;
                                         Please update your existences.
                                     </div>
                                 </a>
-                                <a class="dropdown-item text-center small text-gray-500" href="#">Show All Alerts</a>
+                                <a class="dropdown-item text-center small text-gray-500" href="#" style="font-size: 18px;">Show All Alerts</a>
                             </div>
                         </li> -->
 
@@ -250,9 +237,9 @@ $conn = null;
                         <li class="nav-item dropdown no-arrow">
                             <a class="nav-link dropdown-toggle" href="#" id="userDropdown" role="button"
                                     data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-                                    <span class="mr-2 d-none d-lg-inline text-gray-600 small" style="font-size: 18px;"><?php if (isset($_SESSION['user_id'])) { echo $username; } ?></span>
+                                    <span class="mr-2 d-none d-lg-inline text-gray-600 small" style="font-size: 18px;"><?php echo $username; ?></span>
                                     <img class="img-profile rounded-circle"
-                                    src="<?php if (isset($_SESSION['user_id'])) { echo $pic; } else { echo 'img/userprofile.jpg'; } ?>">
+                                        src="<?php echo $pic; ?>">
                             </a>
                             <!-- Dropdown - User Information -->
                             <div class="dropdown-menu dropdown-menu-right shadow animated--grow-in"
@@ -283,7 +270,7 @@ $conn = null;
 
                     <!-- Page Heading -->
                     <div class="d-sm-flex align-items-center justify-content-between mb-4">
-                        <h1 class="h3 mb-0 text-gray-800">Urusan Rasmi</h1>
+                        <h1 class="h3 mb-0 text-gray-900">Personal History Urusan Rasmi</h1>
                         <!-- <a href="#" id="list_official_business" class="d-none d-sm-inline-block btn btn-sm btn-primary shadow-sm"><i
                                 class="fas fa-download fa-sm text-white-50"></i> Generate Report</a> -->
                     </div>
@@ -301,12 +288,12 @@ $conn = null;
                                                 Urusan Rasmi</div>
                                                 <div class="row no-gutters align-items-center">
                                                     <div class="col-auto">
-                                                        <div class="h5 mb-0 mr-3 font-weight-bold text-gray-800"><?php echo $official_business_teacher_count; ?></div>
+                                                        <div class="h5 mb-0 mr-3 font-weight-bold text-gray-800"><?php echo $official_business_personal_count; ?> Hari</div>
                                                     </div>
                                                     <div class="col">
                                                         <div class="progress progress-sm mr-2">
                                                             <div class="progress-bar bg-info" role="progressbar"
-                                                                style="width: <?php echo $official_business_teacher_count; ?>%" aria-valuenow="50" aria-valuemin="0"
+                                                                style="width: <?php echo $official_business_personal_count; ?>%" aria-valuenow="50" aria-valuemin="0"
                                                                 aria-valuemax="100"></div>
                                                         </div>
                                                     </div>
@@ -344,11 +331,9 @@ $conn = null;
                                             <tr>
                                                 <th scope="col">No.</th>
                                                 <th scope="col">Name</th>
-                                                <th scope="col">Major</th>
-                                                <th scope="col">Phone No.</th>
-                                                <th scope="col">Program Name</th>
                                                 <th scope="col">Date</th>
                                                 <th scope="col">Time</th>
+                                                <th scope="col">Evidence</th>
                                             </tr>
                                             </thead>
                                             <tbody>
@@ -356,11 +341,9 @@ $conn = null;
                                                 <tr>
                                                     <td><?php echo $index + 1; ?></td>
                                                     <td><?php echo $teacher['name']; ?></td>
-                                                    <td><?php echo $teacher['major']; ?></td>
-                                                    <td><?php echo $teacher['phone']; ?></td>
-                                                    <td><?php echo $teacher['program_name']; ?></td>
                                                     <td><?php echo $teacher['start_date'] . ' - ' . $teacher['final_date']; ?></td>
                                                     <td><?php echo $teacher['time_leave'] . ' - ' . $teacher['time_back']; ?></td>
+                                                    <td><?php echo $teacher['evidence']; ?></td>
                                                 </tr>
                                             <?php endforeach; ?>
                                             </tbody>

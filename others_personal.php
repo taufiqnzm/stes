@@ -6,8 +6,6 @@ require_once "config.php"; // Use require_once to ensure it's included only once
 include "restricted.php";
 include "count_personal_existences.php";
 
-$current_date = date('d-m-Y');
-
 $user_id = $_SESSION['user_id']; // Assuming you store the user's ID in the session
 
 // Main query to fetch data for Emergency teachers
@@ -337,7 +335,6 @@ $conn = null;
                                                 <th scope="col">Date</th>
                                                 <th scope="col">Time</th>
                                                 <th scope="col">Reason</th>
-                                                <th scope="col">Action</th>
                                             </tr>
                                             </thead>
                                             <tbody>
@@ -348,13 +345,6 @@ $conn = null;
                                                     <td><?php echo $teacher['start_date'] . ' - ' . $teacher['final_date']; ?></td>
                                                     <td><?php echo $teacher['time_leave'] . ' - ' . $teacher['time_back']; ?></td>
                                                     <td><?php echo $teacher['reason']; ?></td>
-                                                    <td>
-                                                        <?php if ($teacher['start_date'] == $current_date || $teacher['final_date'] >= $current_date): ?>
-                                                            <button class="btn btn-dark btn-sm edit-btn" data-toggle="modal" data-target="#editModal">
-                                                                <i class="fas fa-edit"></i> Edit
-                                                            </button>
-                                                        <?php endif; ?>
-                                                    </td>
                                                 </tr>
                                             <?php endforeach; ?>
                                             </tbody>
@@ -412,113 +402,6 @@ $conn = null;
             </div>
         </div>
     </div>
-
-    <!-- Edit Modal-->
-    <div class="modal fade" id="editModal" tabindex="-1" role="dialog" aria-labelledby="editModalLabel" aria-hidden="true">
-        <div class="modal-dialog" role="document">
-            <div class="modal-content">
-                <form method="post" action="">
-                    <div class="modal-header">
-                        <h5 class="modal-title" id="editModalLabel">Edit Information</h5>
-                        <button class="close" type="button" data-dismiss="modal" aria-label="Close">
-                            <span aria-hidden="true">×</span>
-                        </button>
-                    </div>
-                    <div class="modal-body">
-                        <input type="hidden" name="form_id" id="form_id">
-                        <div class="form-group">
-                            <label for="editName">Name</label>
-                            <input type="text" class="form-control" id="editName" name="name" readonly>
-                        </div>
-                        <div class="form-group row">
-                            <label for="inputExistences" class="col-sm-4 col-form-label">Existences <span class="required"></span></label>
-                            <div class="col-sm-12">
-                                <select class="custom-select" id="inputExistences" name="existence">
-                                    <option hidden selected>Select Existence</option>
-                                    <option value="Absent">Ketidakhadiran</option>
-                                    <option value="Official Business">Urusan Rasmi</option>
-                                    <option value="Emergency">Kecemasan</option>
-                                    <option value="Keberadaan Jam">Keberadaan Jam</option>
-                                    <option value="CRK">Cuti Rehat Khas</option>
-                                    <option value="Haji Umrah">Cuti Haji & Umrah</option>
-                                    <option value="Cuti Bersalin">Cuti Bersalin</option>
-                                    <option value="Cuti Lain">Cuti Lain</option>
-                                </select>
-                            </div>
-                        </div>
-                        <div class="form-group row">
-                            <label for="inputStartDate" class="col-sm-6 col-form-label">Start Date<span class="required"></span></label>
-                            <label for="inputFinalDate" class="col-sm-6 col-form-label">Final Date<span class="required"></span></label>
-                            <div class="col-sm-6">
-                                <input type="date" class="form-control" id="inputStartDate" name="start_date">
-                            </div>
-                            <div class="col-sm-6">
-                                <input type="date" class="form-control" id="inputFinalDate" name="final_date">
-                            </div>
-                        </div>
-                        <div class="form-group row">
-                            <label for="inputStartTime" class="col-sm-6 col-form-label">Time Out<span class="required">*</span></label>
-                            <label for="inputFinalTime" class="col-sm-6 col-form-label">Time In<span class="required">*</span></label>
-                            <div class="col-sm-6">
-                                <input type="time" class="form-control" id="inputStartTime" name="time_leave">
-                            </div>
-                            <div class="col-sm-6">
-                                <input type="time" class="form-control" id="inputFinalTime" name="time_back">
-                            </div>
-                        </div>
-                        <div class="form-group">
-                            <label for="editReason">Reason</label>
-                            <input type="text" class="form-control" id="editReason" name="reason" required>
-                        </div>
-                        <div class="form-group">
-                            <label for="editProgramName">Program Name</label>
-                            <input type="text" class="form-control" id="editProgramName" name="program_name">
-                        </div>
-                        <div class="form-group">
-                            <label for="editLocation">Location</label>
-                            <input type="text" class="form-control" id="editLocation" name="location">
-                        </div>
-                        <div class="form-group">
-                            <label for="editOrganizer">Organizer</label>
-                            <input type="text" class="form-control" id="editOrganizer" name="organizer">
-                        </div>
-                    </div>
-                    <div class="modal-footer">
-                        <button type="submit" class="btn btn-primary">Save changes</button>
-                    </div>
-                </form>
-            </div>
-        </div>
-    </div>
-
-    <script>
-        $(document).ready(function() {
-            $('.edit-btn').click(function() {
-                var name = $(this).data('name');
-                var existence = $(this).data('existence');
-                var startDate = $(this).data('start-date');
-                var finalDate = $(this).data('final-date');
-                var timeLeave = $(this).data('time-leave');
-                var timeBack = $(this).data('time-back');
-                var reason = $(this).data('reason');
-
-                $('#editName').val(name);
-                $('#inputExistences').val(existence);
-                $('#inputStartDate').val(startDate);
-                $('#inputFinalDate').val(finalDate);
-                $('#inputStartTime').val(timeLeave);
-                $('#inputFinalTime').val(timeBack);
-                $('#editReason').val(reason);
-            });
-        });
-    </script>
-    
-    <!-- Bootstrap CSS -->
-    <link href="vendor/bootstrap/css/bootstrap.min.css" rel="stylesheet">
-
-    <!-- jQuery and Bootstrap JS -->
-    <script src="vendor/jquery/jquery.min.js"></script>
-    <script src="vendor/bootstrap/js/bootstrap.bundle.min.js"></script>
 
     <!-- Bootstrap core JavaScript-->
     <script src="vendor/jquery/jquery.min.js"></script>
